@@ -809,22 +809,23 @@ do
                         local target3 = function(obj, data)
                             local fills2, startIdx, endIdx = espEntry.Fills or {}, 1, nil
 
-                            if fills2[startIdx] and fills2[startIdx].From == nil then
-                                endIdx = fills2[startIdx]
+                            -- Use a pcall or a direct check to see if we can reuse the object
+                            if fills2[startIdx] then
+                                -- Check if it's the right type for a Square (which has 'Size')
+                                -- This replaces the problematic line 812
+                                local success = pcall(function() return fills2[startIdx].Size end)
+                                if success then
+                                    endIdx = fills2[startIdx]
+                                else
+                                    -- If it's the wrong type (like a Line), remove it and make a Square
+                                    fills2[startIdx]:Remove()
+                                    endIdx = method3.new'Square'
+                                    fills2[startIdx] = endIdx
+                                end
                             else
                                 endIdx = method3.new'Square'
                                 fills2[startIdx] = endIdx
                             end
-
-                            endIdx.Visible = isVisible and settings.Settings.Box.Filled.Enabled or false
-                            endIdx.Color = boxMinY
-                            endIdx.Transparency = settings.Settings.Box.Filled.Transparency
-                            endIdx.Filled = true
-                            endIdx.Position = obj
-                            endIdx.Size = data - obj
-                            espEntry.Fills = fills2
-
-                            return endIdx
                         end
 
                         target3(startPos3, startPos3 + Vector2.new(size.X, size.Y))
